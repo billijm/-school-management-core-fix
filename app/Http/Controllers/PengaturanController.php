@@ -3,56 +3,42 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pengaturan;
+use App\Models\LokasiPresensi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PengaturanController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    // ======================
+    // PENGATURAN SEKOLAH
+    // ======================
     public function index()
     {
         $pengaturan = Pengaturan::first();
         return view('pages.admin.pengaturan.index', compact('pengaturan'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         abort(404);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         abort(404);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         abort(404);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         abort(404);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $validatedData = $request->validate([
@@ -71,11 +57,9 @@ class PengaturanController extends Controller
         $pengaturan->name = $validatedData['nama_sekolah'];
 
         if ($request->hasFile('logo')) {
-            // Hapus logo lama jika ada
             if ($pengaturan->logo) {
                 Storage::delete($pengaturan->logo);
             }
-            // Simpan logo baru dengan nama sesuai nama sekolah
             $slug = Str::slug($pengaturan->name);
             $pengaturan->logo = 'storage/logos/' . $slug . '_logo.' . $request->file('logo')->getClientOriginalExtension();
             $request->file('logo')->storeAs('logos', $slug . '_logo.' . $request->file('logo')->getClientOriginalExtension(), 'public');
@@ -83,14 +67,76 @@ class PengaturanController extends Controller
 
         $pengaturan->save();
 
-        return redirect()->route('pengaturan.index')->with('success', 'Pengaturan berhasil diperbarui.');
+        return redirect()->route('admin.pengaturan.index')
+                 ->with('success', 'Pengaturan berhasil diperbarui.');
+
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         abort(404);
+    }
+
+    // ======================
+    // PENGATURAN LOKASI PRESENSI
+    // ======================
+    public function lokasiPresensi()
+    {
+        // Ambil data lokasi presensi dengan pagination agar bisa pakai ->links()
+        $lokasi = LokasiPresensi::paginate(10);
+
+        return view('pages.admin.pengaturan-lokasi.index', compact('lokasi'));
+    }
+
+    public function lokasiPresensiCreate()
+    {
+        // Tampilkan halaman form tambah lokasi
+        return view('pages.admin.pengaturan-lokasi.create');
+    }
+
+    public function lokasiPresensiStore(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_lokasi' => 'required|string|max:255',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'radius' => 'required|numeric|min:1',
+        ]);
+
+        LokasiPresensi::create($validated);
+
+        return redirect()->route('admin.pengaturan-lokasi.index')
+            ->with('success', 'Lokasi presensi berhasil ditambahkan.');
+    }
+
+    public function lokasiPresensiEdit($id)
+    {
+        $lokasi = LokasiPresensi::findOrFail($id);
+        return view('pages.admin.pengaturan-lokasi.edit', compact('lokasi'));
+    }
+
+    public function lokasiPresensiUpdate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'nama_lokasi' => 'required|string|max:255',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'radius' => 'required|numeric|min:1',
+        ]);
+
+        $lokasi = LokasiPresensi::findOrFail($id);
+        $lokasi->update($validated);
+
+        return redirect()->route('admin.pengaturan-lokasi.index')
+            ->with('success', 'Lokasi presensi berhasil diperbarui.');
+    }
+
+    public function lokasiPresensiDestroy($id)
+    {
+        $lokasi = LokasiPresensi::findOrFail($id);
+        $lokasi->delete();
+
+        return redirect()->route('admin.pengaturan-lokasi.index')
+            ->with('success', 'Lokasi presensi berhasil dihapus.');
     }
 }

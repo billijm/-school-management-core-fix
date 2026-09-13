@@ -12,19 +12,14 @@ use App\Http\Controllers\PengumumanSekolahController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TugasController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\NametagController;
+use App\Http\Controllers\JadwalKerjaController;
+use App\Http\Controllers\PenugasanJadwalController;
+use App\Http\Controllers\PengaturanLokasiController;
+use App\Http\Controllers\LaporanPresensiController;
+use App\Http\Controllers\PresensiController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
 
 Route::get('/', function () {
     return view('welcome');
@@ -32,42 +27,126 @@ Route::get('/', function () {
 
 Auth::routes();
 
+Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+/**
+ * ✅ Rute Publik (Tanpa Login)
+ */
+Route::get('/halaman-presensi', [PresensiController::class, 'showPresensiPage'])->name('presensi.scan');
+Route::post('/presensi/store', [PresensiController::class, 'store'])->name('presensi.store');
+Route::post('/presensi/cek-lokasi', [PresensiController::class, 'cekLokasi'])->name('presensi.cek-lokasi');
+
+// --- Rute untuk Halaman Scan QR ---
+
+// Rute ini akan menampilkan halaman presensi/scanner QR
+Route::get('/qr-scan', [App\Http\Controllers\PresensiController::class, 'showPresensiPage'])->name('qrscan.index');
+
+// ... (Rute-rute lainnya) ...
+// 
+Route::post('/presensi/store', [App\Http\Controllers\PresensiController::class, 'store'])->name('presensi.store');
+/**
+ * ✅ Routes untuk semua pengguna login
+ */
 Route::group(['middleware' => 'auth'], function () {
     Route::get('/profile', [UserController::class, 'edit'])->name('profile');
     Route::put('/update-profile', [UserController::class, 'update'])->name('update.profile');
     Route::get('/edit-password', [UserController::class, 'editPassword'])->name('ubah-password');
     Route::patch('/update-password', [UserController::class, 'updatePassword'])->name('update-password');
+    Route::get('/cetak-nametag', [NametagController::class, 'cetakNametagPengguna'])->name('nametag.cetak.pengguna');
+
+    // ✅ Laporan presensi pribadi (semua role)
+    Route::get('/laporan-presensi', [LaporanPresensiController::class, 'indexSelf'])->name('laporan-presensi.index');
+    Route::get('/laporan-presensi/export', [LaporanPresensiController::class, 'exportSelf'])->name('laporan-presensi.export');
 });
 
-Route::group(['middleware' => ['auth', 'checkRole:guru']], function () {
-    Route::get('/guru/dashboard', [HomeController::class, 'guru'])->name('guru.dashboard');
-    Route::resource('materi', MateriController::class);
-    Route::resource('tugas', TugasController::class);
-    Route::get('/jawaban-download/{id}', [TugasController::class, 'downloadJawaban'])->name('guru.jawaban.download');
+/**
+ * ✅ Routes untuk Admin
+ */
+Route::group([
+    'middleware' => ['auth', 'checkRole:admin'],
+    'prefix' => 'admin',
+    'as' => 'admin.',
+], function () {
+    Route::get('/dashboard', [HomeController::class, 'admin'])->name('dashboard');
+
+    Route::resources([
+        'jurusan' => JurusanController::class,
+        'mapel' => MapelController::class,
+        'guru' => GuruController::class,
+        'kelas' => KelasController::class,
+        'siswa' => SiswaController::class,
+        'user' => UserController::class,
+        'jadwal' => JadwalController::class,
+        'pengumuman-sekolah' => PengumumanSekolahController::class,
+        'pengaturan' => PengaturanController::class,
+        'jadwal-kerja' => JadwalKerjaController::class,
+        'penugasan-jadwal' => PenugasanJadwalController::class,
+        'pengaturan-lokasi' => PengaturanLokasiController::class,
+    ]);
+
+    Route::post('/nametag/cetak-terpilih', [NametagController::class, 'cetakNametagTerpilih'])->name('nametag.cetak.terpilih');
+    // ✅ Tambahkan di grup admin
+Route::get('/halaman-presensi', [PresensiController::class, 'showPresensiPage'])->name('presensi.scan');
+Route::resource('penugasan-jadwal', PenugasanJadwalController::class)->middleware(['auth', 'checkRole:admin']);
+
+
+
+    // ✅ Laporan presensi admin
+    Route::get('/laporan-presensi', [LaporanPresensiController::class, 'indexAdmin'])->name('laporan-presensi.index-admin');
+    Route::get('/laporan-presensi/export', [LaporanPresensiController::class, 'exportAdmin'])->name('laporan-presensi.export');
 });
-Route::group(['middleware' => ['auth', 'checkRole:siswa']], function () {
-    Route::get('/siswa/dashboard', [HomeController::class, 'siswa'])->name('siswa.dashboard');
-    Route::get('/siswa/materi', [MateriController::class, 'siswa'])->name('siswa.materi');
-    Route::get('/materi-download/{id}', [MateriController::class, 'download'])->name('siswa.materi.download');
-    Route::get('/siswa/tugas', [TugasController::class, 'siswa'])->name('siswa.tugas');
-    Route::get('/tugas-download/{id}', [TugasController::class, 'download'])->name('siswa.tugas.download');
+
+/**
+ * ✅ Routes untuk Guru
+ */
+Route::group([
+    'middleware' => ['auth', 'checkRole:guru'],
+    'prefix' => 'guru',
+    'as' => 'guru.',
+], function () {
+    Route::get('/dashboard', [HomeController::class, 'guru'])->name('dashboard');
+
+    Route::resources([
+        'materi' => MateriController::class,
+        'tugas' => TugasController::class,
+    ]);
+
+    Route::get('/jawaban-download/{id}', [TugasController::class, 'downloadJawaban'])->name('jawaban.download');
+
+    // ✅ Laporan presensi guru
+    Route::get('/laporan-presensi', [LaporanPresensiController::class, 'indexSelf'])->name('laporan-presensi');
+});
+
+/**
+ * ✅ Routes untuk Siswa
+ */
+Route::group([
+    'middleware' => ['auth', 'checkRole:siswa'],
+    'prefix' => 'siswa',
+    'as' => 'siswa.',
+], function () {
+    Route::get('/dashboard', [HomeController::class, 'siswa'])->name('dashboard');
+
+    Route::get('/materi', [MateriController::class, 'index'])->name('materi');
+    Route::get('/materi-download/{id}', [MateriController::class, 'download'])->name('materi.download');
+
+    // ✅ Route tugas siswa
+    Route::get('/tugas', [TugasController::class, 'index'])->name('tugas');
+    Route::get('/tugas-download/{id}', [TugasController::class, 'download'])->name('tugas.download');
     Route::post('/kirim-jawaban', [TugasController::class, 'kirimJawaban'])->name('kirim-jawaban');
+
+    // ✅ Laporan presensi siswa
+    Route::get('/laporan-presensi', [LaporanPresensiController::class, 'indexSelf'])->name('laporan-presensi');
 });
-Route::group(['middleware' => ['auth', 'checkRole:orangtua']], function () {
-    Route::get('/orangtua/dashboard', [HomeController::class, 'orangtua'])->name('orangtua.dashboard');
-    Route::get('/orangtua/tugas/siswa', [TugasController::class, 'orangtua'])->name('orangtua.tugas.siswa');
-});
-Route::group(['middleware' => ['auth', 'checkRole:admin']], function () {
-    Route::get('/admin/dashboard', [HomeController::class, 'admin'])->name('admin.dashboard');
-    Route::resource('jurusan', JurusanController::class);
-    Route::resource('mapel', MapelController::class);
-    Route::resource('guru', GuruController::class);
-    Route::resource('kelas', KelasController::class);
-    Route::resource('siswa', SiswaController::class);
-    Route::resource('user', UserController::class);
-    Route::resource('jadwal', JadwalController::class);
-    Route::resource('pengumuman-sekolah', PengumumanSekolahController::class);
-    Route::resource('pengaturan', PengaturanController::class);
+
+/**
+ * ✅ Routes untuk Orangtua
+ */
+Route::group([
+    'middleware' => ['auth', 'checkRole:orangtua'],
+    'prefix' => 'orangtua',
+    'as' => 'orangtua.',
+], function () {
+    Route::get('/dashboard', [HomeController::class, 'orangtua'])->name('dashboard');
+    Route::get('/tugas/siswa', [TugasController::class, 'orangtua'])->name('tugas.siswa');
 });
