@@ -1,121 +1,16 @@
+# School Management System (Core Architecture Bypass)
 
-# Sistem Informasi Sekolah
+This repository is a modified version of an open-source Laravel school management template. I used this project as a sandbox to test my backend debugging and database architecture skills.
 
-Sistem informasi sekolah berbasis laravel 11 dengan template dashboard
-[Stisla](https://getstisla.com/)
-## Authors
+### What I Did:
+The original legacy code contained several critical errors in its 2025 migration files and database connection settings. My core contributions to getting this system live locally include:
+1. **Migration Refactoring:** Identified and bypassed broken database migration files (specifically conflicting foreign keys in `jadwal_kerjas` and duplicate columns in `lokasi_presensi`).
+2. **Database Configuration:** Resolved MySQL 8+ authentication plugin conflicts (`caching_sha2_password` vs `mysql_native_password`) to successfully seed the database.
+3. **View Logic Bypassing:** Debugged and bypassed undefined variables in the Laravel Blade authentication views to restore dashboard access.
 
-- [Pascal Adnan](https://www.github.com/lacsapadnan)
+### Tech Stack:
+- PHP / Laravel 11
+- MySQL (Laragon)
+- MVC Architecture
 
-
-## Fitur
-
-- CRUD Jurusan
-- CRUD Mata Pelajaran
-- CRUD Guru
-- CRUD Kelas
-- CRUD User
-- CRUD Materi
-- CRUD Tugas & Jawaban
-- CRUD Jadwal Sekolah
-
-
-## Screenshots
-
-![Login](https://i.ibb.co/QrvFVsq/download.png)
-
-![Dashboard](https://i.ibb.co/4Vvff5F/Screenshot-3.jpg)
-
-
-## Instalasi
-
-clone project atau download
-
-```bash
-  git clone https://github.com/lacsapadnan/Sistem-Informasi-Sekolah.git
-  cd Sistem-Informasi-Sekolah
-  npm install
-  composer install
-  cp .env.example .env
-```
-
-Buka `.env` dan atur database anda
-```bash
-  DB_PORT=3306
-  DB_DATABASE=laravel
-  DB_USERNAME=root
-  DB_PASSWORD=
-```
-
-Install website
-```bash
-  php artisan key:generate
-  php artisan migrate --seed
-```
-
-Jalankan website
-```bash
-  php artisan serve
-```
-## Default akun untuk testing
-
-Admin
-```bash
-  email : admin@mail.com
-  password : admin123
-```
-
-Guru
-```bash
-  email : budi@mail.com
-  password : budi123
-
-  email : gunawan@mail.com
-  password : gunawan123
-```
-
-Siswa
-```bash
-  email : kevin@mail.com
-  password : kevin123
-
-  email : siska@mail.com
-  password : siska123
-```
-## Update Selanjutnya
-
-(Free Version)
-- Fitur Pengumuman Sekolah ✅
-- Role Orang tua (Lihat pengumpulan tugas) ✅
-- Pengaturan ✅
-
-(Premium Version)
-- Premium Template Metronic ✅
-- Fitur Absensi ✅
-- Fitur Kuis atau Ujian ✅
-- Fitur Tabungan Siswa ✅
-- Fitur Pembayaran Sekolah ✅
-- Payment Gateway (Midtrans, Xendit, Tripay, dll) ✅(Currently Xendit Integrated)
-- Role Orangtua (Lihat absensi, nilai) ✅
-- Fitur e-rapot ✅
-- Fitur nilai tugas ✅
-
-
-## DEMO PREMIUM
-
-https://sekolah.karsagroup.id
-
-Admin
-```bash
-  email : admin@mail.com
-  password : password
-```
-
-## PEMBELIAN
-
-~~Promo 10/10 Orang Pertama **500rb**~~
-Promo 15/20 Kloter Berikutnya **750rb**
-
-Hubungi 
-- https://wa.me/6282244793613
-- http://instagram.com/lacsapadnan
+*Note: This repository is intended as a technical R&D showcase for backend debugging and is not meant for production deployment.*
